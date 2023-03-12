@@ -26,7 +26,7 @@ public abstract class CommentedConfigurateFile<T extends JavaPlugin, U extends A
         super(plugin, resourcePath, fileName, folder);
         this.loaderBuilder = loadBuilder();
 
-        this.loaderBuilder.defaultOptions(opts -> opts.serializers(builderOptions()));
+        this.loaderBuilder.defaultOptions(opts -> opts.serializers(this::builderOptions));
         this.loader = loaderBuilder.build();
         this.rootNode = loader.load();
 
@@ -45,7 +45,7 @@ public abstract class CommentedConfigurateFile<T extends JavaPlugin, U extends A
 
     protected abstract R loadBuilder();
     
-    protected abstract Consumer<TypeSerializerCollection.Builder> builderOptions();
+    protected abstract void builderOptions(TypeSerializerCollection.Builder builder);
 
     protected abstract Transformation getTransformation();
 
