@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.loader.AbstractConfigurationLoader;
+import org.spongepowered.configurate.serialize.TypeSerializerCollection;
+
+import java.util.function.Consumer;
 
 /**
  * @author sarhatabaot
@@ -23,7 +26,7 @@ public abstract class CommentedConfigurateFile<T extends JavaPlugin, U extends A
         super(plugin, resourcePath, fileName, folder);
         this.loaderBuilder = loadBuilder();
 
-        builderOptions();
+        this.loaderBuilder.defaultOptions(opts -> opts.serializers(builderOptions()));
         this.loader = loaderBuilder.build();
         this.rootNode = loader.load();
 
@@ -41,8 +44,8 @@ public abstract class CommentedConfigurateFile<T extends JavaPlugin, U extends A
     protected abstract void initValues() throws ConfigurateException;
 
     protected abstract R loadBuilder();
-
-    protected abstract void builderOptions();
+    
+    protected abstract Consumer<TypeSerializerCollection.Builder> builderOptions();
 
     protected abstract Transformation getTransformation();
 
