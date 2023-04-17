@@ -1,10 +1,10 @@
 plugins {
-    id("java")
+    id("java-library")
     id("maven-publish")
 }
 
 group = "com.lapzupi.dev"
-version = "1.1.0"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
@@ -17,13 +17,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.19.3-R0.1-SNAPSHOT")
+    compileOnly(libs.paper.api)
     
     //libraries
-    compileOnly("org.spongepowered:configurate-yaml:4.1.2")
-    compileOnly("org.spongepowered:configurate-gson:4.1.2")
-    compileOnly("org.spongepowered:configurate-hocon:4.1.2")
-    
+    api(libs.configurate.yaml)
+    api(libs.configurate.gson)
+    api(libs.configurate.hocon)
 }
 
 java {
