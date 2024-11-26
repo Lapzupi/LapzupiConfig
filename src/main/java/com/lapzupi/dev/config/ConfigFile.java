@@ -9,12 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 /**
- * @author sarhatabaot
+ * A utility class for managing YAML configuration files in a Bukkit/Spigot plugin.
+ *
+ * @param <T> The plugin class extending {@link JavaPlugin}.
  */
 public class ConfigFile<T extends JavaPlugin> {
     private final String resourcePath;
@@ -22,46 +23,66 @@ public class ConfigFile<T extends JavaPlugin> {
     protected final T plugin;
     protected final String fileName;
     protected final File folder;
-
     protected File file;
-    protected FileConfiguration config;
 
-    private boolean copyDefaults;
+    private FileConfiguration config;
+    private boolean copyDefaults = false;
 
-    public ConfigFile(final @NotNull T plugin, final String resourcePath, final String fileName, final String folder) {
+    /**
+     * Constructs a new {@link ConfigFile}.
+     *
+     * @param plugin       The plugin instance.
+     * @param resourcePath The path to the resource inside the plugin JAR.
+     * @param fileName     The name of the configuration file.
+     * @param folder       The folder where the configuration file resides.
+     */
+    public ConfigFile(@NotNull final T plugin, @NotNull final String resourcePath,
+                      @NotNull final String fileName, @NotNull final String folder) {
         this.plugin = plugin;
-        this.fileName = fileName;
         this.resourcePath = resourcePath;
-        this.folder = new File(plugin.getDataFolder().getPath() + File.separator + folder);
+        this.fileName = fileName;
+        this.folder = new File(plugin.getDataFolder(), folder);
     }
 
+    /**
+     * Saves the default configuration file from the JAR if it doesn't exist.
+     * Then reloads the configuration into memory.
+     */
     public void saveDefaultConfig() {
-        if (this.file == null) {
-            this.file = new File(folder, fileName);
+        if (file == null) {
+            file = new File(folder, fileName);
         }
 
-        if (!this.file.exists()) {
+        if (!file.exists()) {
+            if (!folder.exists() && !folder.mkdirs()) {
+                plugin.getLogger().warning("Failed to create configuration folder: " + folder.getPath());
+            }
             plugin.saveResource(resourcePath + fileName, false);
         }
 
         reloadConfig();
     }
 
+    /**
+     * Saves the current in-memory configuration to the file.
+     */
     public void saveConfig() {
-        if (this.config == null)
+        if (config == null || file == null) {
+            plugin.getLogger().warning("Config file or configuration is not initialized.");
             return;
-
-        if (file == null)
-            return;
+        }
 
         try {
             config.save(file);
         } catch (IOException ex) {
-            plugin.getLogger().warning(ex.getMessage());
+            plugin.getLogger().log(Level.SEVERE, "Failed to save configuration file: %s".formatted(file.getPath()), ex);
         }
     }
 
-
+    /**
+     * Reloads the configuration from the file into memory.
+     * If the file does not exist, a new one will be created.
+     */
     public void reloadConfig() {
         if (file == null) {
             file = new File(folder, fileName);
@@ -70,40 +91,58 @@ public class ConfigFile<T extends JavaPlugin> {
         config = YamlConfiguration.loadConfiguration(file);
     }
 
+    /**
+     * Reloads the configuration and sets its defaults from the JAR resource if available.
+     */
     public void reloadDefaultConfig() {
         if (file == null) {
             file = new File(folder, fileName);
         }
 
-        if (!file.exists()) {
-            config = YamlConfiguration.loadConfiguration(file);
-            try (InputStream resource = plugin.getResource(resourcePath + fileName)) {
-                if (resource != null) {
-                    try (Reader defConfigStream = new InputStreamReader(resource, StandardCharsets.UTF_8)) {
-                        YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
-                        defConfig.options().copyDefaults(copyDefaults);
-                        config.setDefaults(defConfig);
+        config = YamlConfiguration.loadConfiguration(file);
+        try (InputStream resource = plugin.getResource(resourcePath + fileName)) {
+            if (resource != null) {
+                try (InputStreamReader reader = new InputStreamReader(resource, StandardCharsets.UTF_8)) {
+                    FileConfiguration defConfig = YamlConfiguration.loadConfiguration(reader);
+                    if (copyDefaults) {
+                        defConfig.options().copyDefaults(true);
                     }
+                    config.setDefaults(defConfig);
                 }
-            } catch (IOException e) {
-                plugin.getLogger().log(Level.SEVERE,e.getMessage(),e);
             }
+        } catch (IOException ex) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to reload default configuration", ex);
         }
     }
 
+    /**
+     * Retrieves the current configuration. Reloads it if not already loaded.
+     *
+     * @return The current {@link FileConfiguration}.
+     */
     @NotNull
     public FileConfiguration getConfig() {
         if (config == null) {
             reloadConfig();
         }
-        return this.config;
+        return config;
     }
 
+    /**
+     * Checks whether default values are copied into the configuration.
+     *
+     * @return {@code true} if defaults are copied; {@code false} otherwise.
+     */
     public boolean isCopyDefaults() {
         return copyDefaults;
     }
 
-    public void setCopyDefaults(final boolean copyDefaults) {
+    /**
+     * Sets whether default values should be copied into the configuration.
+     *
+     * @param copyDefaults {@code true} to copy defaults; {@code false} otherwise.
+     */
+    public void setCopyDefaults(boolean copyDefaults) {
         this.copyDefaults = copyDefaults;
     }
 }
