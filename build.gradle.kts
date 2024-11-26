@@ -4,17 +4,7 @@ plugins {
 }
 
 group = "com.lapzupi.dev"
-version = "1.1.2"
-
-repositories {
-    mavenCentral()
-    maven(
-        url = "https://repo.papermc.io/repository/maven-public/"
-    )
-    maven(
-        url = "https://oss.sonatype.org/content/groups/public/"
-    )
-}
+version = "1.2.0"
 
 dependencies {
     compileOnly(libs.paper.api)
@@ -27,8 +17,10 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
+
+    withSourcesJar()
 }
 
 
