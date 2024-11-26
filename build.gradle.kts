@@ -3,7 +3,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "com.lapzupi.dev"
+group = "com.lapzupi.dev.config"
 version = "1.2.0"
 
 dependencies {
